@@ -2,30 +2,27 @@ package main
 
 import (
 	"fmt"
+	"github.com/Thauan/go-face-detect/handlers"
 	"gocv.io/x/gocv"
-	"image"
 	"image/color"
 	"os"
 	"strconv"
 )
 
 func main() {
-	if len(os.Args) < 3 {
+	if len(os.Args) < 1 {
 		fmt.Println("How to run:\n\tfacedetect [camera ID] [classifier XML file]")
 		return
 	}
 
 	// parse args
-	deviceID, _ := strconv.Atoi(os.Args[1])
-	xmlFile := os.Args[2]
+	device, _ := strconv.Atoi(os.Args[1])
+	xmlFile := "data/haarcascade_frontalface_default.xml"
 
-	// open webcam
-	// Avaibles in my machine: 0, 2
-	webcam, err := gocv.VideoCaptureDevice(deviceID)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	webcam, err := handlers.WebcamDeviceEstablish(device)
+
+	fmt.Println(err)
+
 	defer webcam.Close()
 
 	// open display window
@@ -48,15 +45,11 @@ func main() {
 		return
 	}
 
-	// if !classifier.Load(xmlFile2) {
-	// 	fmt.Printf("Error reading cascade file: %v\n", xmlFile2)
-	// 	return
-	// }
+	fmt.Printf("start reading camera device: %v\n", device)
 
-	fmt.Printf("start reading camera device: %v\n", deviceID)
 	for {
 		if ok := webcam.Read(&img); !ok {
-			fmt.Printf("cannot read device %d\n", deviceID)
+			fmt.Printf("cannot read device %d\n", device)
 			return
 		}
 		if img.Empty() {
@@ -70,11 +63,7 @@ func main() {
 		// draw a rectangle around each face on the original image,
 		// along with text identifying as "Human"
 		for _, r := range rects {
-			gocv.Rectangle(&img, r, blue, 3)
-
-			size := gocv.GetTextSize("Human", gocv.FontHersheyPlain, 1.2, 2)
-			pt := image.Pt(r.Min.X+(r.Min.X/2)-(size.X/2), r.Min.Y-2)
-			gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
+			handlers.RectTracking(img, r, blue, "Human")
 		}
 
 		window.ResizeWindow(600, 600)
