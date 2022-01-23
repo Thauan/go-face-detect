@@ -17,7 +17,8 @@ func main() {
 
 	// parse args
 	device, _ := strconv.Atoi(os.Args[1])
-	xmlFile := "data/haarcascade_frontalface_default.xml"
+	xmlFrontalFace := "data/haarcascade_frontalface_default.xml"
+	xmlEye := "data/eye.xml"
 
 	webcam, err := handlers.WebcamDeviceEstablish(device)
 
@@ -35,13 +36,22 @@ func main() {
 
 	// color for the rect when faces detected
 	blue := color.RGBA{0, 0, 255, 0}
+	red := color.RGBA{255, 0, 0, 0}
 
 	// load classifier to recognize faces
-	classifier := gocv.NewCascadeClassifier()
-	defer classifier.Close()
+	classifierFrontal := gocv.NewCascadeClassifier()
+	classifierEye := gocv.NewCascadeClassifier()
 
-	if !classifier.Load(xmlFile) {
-		fmt.Printf("Error reading cascade file: %v\n", xmlFile)
+	defer classifierFrontal.Close()
+	defer classifierEye.Close()
+
+	if !classifierFrontal.Load(xmlFrontalFace) {
+		fmt.Printf("Error reading cascade file: %v\n", xmlFrontalFace)
+		return
+	}
+
+	if !classifierEye.Load(xmlEye) {
+		fmt.Printf("Error reading cascade file: %v\n", xmlEye)
 		return
 	}
 
@@ -57,13 +67,23 @@ func main() {
 		}
 
 		// detect faces
-		rects := classifier.DetectMultiScale(img)
+		rects := classifierFrontal.DetectMultiScale(img)
 		fmt.Printf("found %d faces\n", len(rects))
 
 		// draw a rectangle around each face on the original image,
 		// along with text identifying as "Human"
 		for _, r := range rects {
-			handlers.RectTracking(img, r, blue, "Human")
+			handlers.RectTracking(img, r, 2, blue, "Human")
+		}
+
+		// detect faces
+		rectsEye := classifierEye.DetectMultiScale(img)
+		fmt.Printf("found %d eyes\n", len(rectsEye))
+
+		// draw a rectangle around each face on the original image,
+		// along with text identifying as "Human"
+		for _, r := range rectsEye {
+			handlers.RectTracking(img, r, 4, red, "Eye")
 		}
 
 		window.ResizeWindow(600, 600)
