@@ -2,21 +2,27 @@ package main
 
 import (
 	"fmt"
+	"image/color"
+	"strconv"
+	"strings"
+
 	"github.com/Thauan/go-face-detect/handlers"
 	"gocv.io/x/gocv"
-	"image/color"
-	"os"
-	"strconv"
 )
 
 func main() {
-	if len(os.Args) < 1 {
-		fmt.Println("How to run:\n\tfacedetect [camera ID] [classifier XML file]")
-		return
-	}
+
+	answers := handlers.Checkboxes(
+		"Select webcam device?",
+		[]string{
+			"2",
+			"3",
+		},
+	)
+	s := strings.Join(answers, ", ")
 
 	// parse args
-	device, _ := strconv.Atoi(os.Args[1])
+	device, _ := strconv.Atoi(s)
 	xmlFrontalFace := "data/haarcascade_frontalface_default.xml"
 	xmlEye := "data/eye.xml"
 
